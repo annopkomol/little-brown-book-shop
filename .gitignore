@@ -1,9 +1,11 @@
 .idea/
-./api/.idea/
-./web/.idea/
+/api/.idea/
+/web/.idea/
 
 .vscode/
-./api/.vscode/
-./web/.vscode/
+/api/.vscode/
+/web/.vscode/
 
-./db/volume/
+
+*/.env
+/db/volume/
