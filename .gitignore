@@ -1,0 +1,9 @@
+.idea/
+./api/.idea/
+./web/.idea/
+
+.vscode/
+./api/.vscode/
+./web/.vscode/
+
+./db/volume/
