@@ -13,7 +13,7 @@ type Cart struct {
 func (c *Cart) TotalAmount() decimal.Decimal {
 	var amount decimal.Decimal
 	for _, o := range c.Orders {
-		orderAmount := o.Book.Price.Mul(decimal.NewFromInt(int64(o.Qty)))
+		orderAmount := o.TotalPrice()
 		amount = decimal.Sum(amount, orderAmount)
 	}
 	return amount
