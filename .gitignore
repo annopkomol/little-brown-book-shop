@@ -9,3 +9,4 @@
 
 */.env
 /db/volume/
+db_conn_url.txt
