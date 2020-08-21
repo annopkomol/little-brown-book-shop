@@ -21,22 +21,22 @@ func TestDiscountService_CheckDiscount(t *testing.T) {
 			name: "2 Harry 1 Fake :D",
 			args: args{cart: domain.Cart{Orders: []domain.Order{{
 				Book: domain.Book{
-					ID:     0,
-					Tittle: "Harry Potter and the Philosopher's Stone (I)",
-					Cover:  "",
-					Price:  decimal.NewFromInt(350),
-				},
-				Qty: 3,
-			}, {
-				Book: domain.Book{
-					Tittle: "Harry Potter and the Chamber of Secrets (II)",
-					Price:  decimal.NewFromInt(350),
+					ID:    0,
+					Title: "Harry Potter and the Philosopher's Stone (I)",
+					Cover: "",
+					Price: decimal.NewFromInt(350),
 				},
 				Qty: 2,
 			}, {
 				Book: domain.Book{
-					Tittle: "I am a fake Harry Potter !! (XIII)",
-					Price:  decimal.NewFromInt(99999),
+					Title: "Harry Potter and the Chamber of Secrets (II)",
+					Price: decimal.NewFromInt(350),
+				},
+				Qty: 1,
+			}, {
+				Book: domain.Book{
+					Title: "I am a fake Harry Potter !! (XIII)",
+					Price: decimal.NewFromInt(99999),
 				},
 				Qty: 1,
 			},
@@ -46,6 +46,49 @@ func TestDiscountService_CheckDiscount(t *testing.T) {
 					Message: "",
 					Amount:  decimal.NewFromInt(70),
 				}},
+			},
+		},
+		{
+			name: "no discount",
+			args: args{
+				cart: domain.Cart{
+					Orders: []domain.Order{
+						{
+							Book: domain.Book{
+								Title: "harry",
+								Price: decimal.NewFromInt(123123),
+							},
+							Qty: 7,
+						}, {
+							Book: domain.Book{
+								Title: "harry",
+								Price: decimal.NewFromInt(123123),
+							},
+							Qty: 7,
+						}, {
+							Book: domain.Book{
+								Title: "harry",
+								Price: decimal.NewFromInt(123123),
+							},
+							Qty: 7,
+						}, {
+							Book: domain.Book{
+								Title: "harry",
+								Price: decimal.NewFromInt(123123),
+							},
+							Qty: 7,
+						}, {
+							Book: domain.Book{
+								Title: "harry",
+								Price: decimal.NewFromInt(123123),
+							},
+							Qty: 7,
+						},
+					},
+				},
+			},
+			wantDiscounts: domain.Discounts{
+				All: nil,
 			},
 		},
 	}
@@ -111,22 +154,22 @@ func Test_uniqueHarryPotterDiscount(t *testing.T) {
 				cart: domain.Cart{
 					Orders: []domain.Order{{
 						Book: domain.Book{
-							ID:     0,
-							Tittle: "Harry Potter and the Philosopher's Stone (I)",
-							Cover:  "",
-							Price:  decimal.NewFromInt(350),
+							ID:    0,
+							Title: "Harry Potter and the Philosopher's Stone (I)",
+							Cover: "",
+							Price: decimal.NewFromInt(350),
 						},
 						Qty: 3,
 					}, {
 						Book: domain.Book{
-							Tittle: "Harry Potter and the Chamber of Secrets (II)",
-							Price:  decimal.NewFromInt(350),
+							Title: "Harry Potter and the Chamber of Secrets (II)",
+							Price: decimal.NewFromInt(350),
 						},
 						Qty: 2,
 					}, {
 						Book: domain.Book{
-							Tittle: "I am a fake Harry Potter !! (XIII)",
-							Price:  decimal.NewFromInt(99999),
+							Title: "I am a fake Harry Potter !! (XIII)",
+							Price: decimal.NewFromInt(99999),
 						},
 						Qty: 1,
 					},

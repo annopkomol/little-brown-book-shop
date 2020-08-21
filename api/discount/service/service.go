@@ -8,6 +8,10 @@ import (
 type DiscountService struct {
 }
 
+func NewDiscountService() *DiscountService {
+	return &DiscountService{}
+}
+
 func (d *DiscountService) CheckDiscount(cart domain.Cart) (discounts domain.Discounts) {
 	harryDiscount := uniqueHarryPotterDiscount(cart)
 	if !harryDiscount.Amount.IsZero() {
@@ -30,9 +34,9 @@ func uniqueHarryPotterDiscount(cart domain.Cart) domain.Discount {
 		currentRule             uniqueHarryPotterRule
 		totalPrice              = decimal.NewFromInt(0)
 	)
-	isHarryPotter := func(tittle string) bool {
+	isHarryPotter := func(title string) bool {
 		for _, series := range harryPotterSeries {
-			if tittle == series {
+			if title == series {
 				return true
 			}
 		}
@@ -40,9 +44,9 @@ func uniqueHarryPotterDiscount(cart domain.Cart) domain.Discount {
 	}
 
 	for _, order := range cart.Orders {
-		isHP := isHarryPotter(order.Tittle)
+		isHP := isHarryPotter(order.Book.Title)
 		if isHP {
-			totalPrice = decimal.Sum(order.TotalPrice())
+			totalPrice = decimal.Sum(totalPrice, order.Book.Price)
 			unique++
 		}
 	}
