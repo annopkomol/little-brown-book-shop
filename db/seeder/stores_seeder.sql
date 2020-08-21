@@ -1,0 +1,1 @@
+INSERT INTO LINE.stores (name, location) VALUES ('Siam', 'thailand');
