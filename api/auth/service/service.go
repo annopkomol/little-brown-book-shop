@@ -1,25 +1,17 @@
 package service
 
 import (
+	"database/sql"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
-	"lbbs-service/domain"
 )
 
-var log *logrus.Logger
-
-type authService struct {
-	repo domain.AuthRepository
-}
-
-func NewAuthService(repo domain.AuthRepository, logger *logrus.Logger) *authService {
-	log = logger
-	return &authService{repo: repo}
-}
-
 func (a *authService) Login(username string, password string) (success bool, err error) {
-	hashed, err := a.repo.GetPassword(username)
+	hashed, err := a.authRepo.GetPassword(username)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
 		return false, err
 	}
 
@@ -33,7 +25,7 @@ func (a *authService) Login(username string, password string) (success bool, err
 }
 
 func (a *authService) GetPosID(username string) (posID int, err error) {
-	return a.repo.GetPosID(username)
+	return a.authRepo.GetPosID(username)
 }
 
 func hashPassword(password string) (string, error) {
