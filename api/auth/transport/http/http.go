@@ -31,7 +31,7 @@ func (a *AuthHandler) Login(c echo.Context) error {
 		return res.Error(c, err)
 	}
 	if !success {
-		return res.Error(c, domain.NewErrorWithConfig(401, "credential is incorrect"))
+		return res.Error(c, domain.NewErrorWithConfig(403, "credential is incorrect"))
 	}
 	posID, err := a.service.GetPosID(req.Username)
 	if err != nil {
