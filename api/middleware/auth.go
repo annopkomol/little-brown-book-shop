@@ -17,16 +17,18 @@ func Auth() echo.MiddlewareFunc {
 		SigningKey:    []byte(key),
 		Skipper:       middleware.DefaultSkipper,
 		SigningMethod: middleware.AlgorithmHS256,
-		ContextKey:    "pos-id",
+		ContextKey:    "token",
 		TokenLookup:   "header:" + echo.HeaderAuthorization,
 		AuthScheme:    "Bearer",
 		Claims:        jwt.MapClaims{},
 	})
 }
 
-func SetPosID2(next echo.HandlerFunc) echo.HandlerFunc {
+func SetToken(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		c.Set("pos-id", 1)
+		claims := c.Get("token").(*jwt.Token).Claims.(jwt.MapClaims)
+		id := claims["pos-id"]
+		c.Set("pos-id", id)
 		return next(c)
 	}
 }

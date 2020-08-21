@@ -23,7 +23,7 @@ func Init(c Config) {
 	bookRoute.GET("", book.GetBookList)
 
 	// cart
-	cartRoute := e.Group("/cart", middleware.SetPosID2)
+	cartRoute := e.Group("/cart", middleware.Auth(), middleware.SetToken)
 	cartRoute.GET("", cart.GetCart)
 	cartRoute.POST("/:book-id", cart.AddBookToCart)
 	cartRoute.DELETE("/:book-id", cart.RemoveBookToCart)
