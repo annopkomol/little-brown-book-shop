@@ -4,25 +4,48 @@ import (
 	"github.com/labstack/echo"
 	"github.com/shopspring/decimal"
 	"lbbs-service/domain"
+	"lbbs-service/util"
 	res "lbbs-service/util/response"
 	"strconv"
 )
 
 type CartHandler struct {
-	service domain.CartService
+	service  domain.CartService
+	discount domain.DiscountService
 }
 
-func NewCartHandler(service domain.CartService) *CartHandler {
-	return &CartHandler{service: service}
+func NewCartHandler(service domain.CartService, discount domain.DiscountService) *CartHandler {
+	return &CartHandler{service: service, discount: discount}
 }
 
 func (h *CartHandler) GetCart(c echo.Context) error {
-	posID, _ := c.Get("pos-id").(int)
+	type discountFixedStr struct {
+		Message string `json:"message"`
+		Amount  string `json:"amount"`
+	}
+	resp := struct {
+		Cart          domain.Cart        `json:"cart"`
+		Discount      []discountFixedStr `json:"discounts"`
+		TotalDiscount string             `json:"total_discount"`
+		Net           string             `json:"net_amount"`
+	}{}
+
+	posID := util.GetToken(c)
 	cart, err := h.service.GetCart(posID)
 	if err != nil {
 		return res.Error(c, err)
 	}
-	return res.Success(c, cart)
+	discounts := h.discount.CheckDiscount(cart)
+	resp.Cart = cart
+	for _, d := range discounts.All {
+		resp.Discount = append(resp.Discount, discountFixedStr{
+			Message: d.Message,
+			Amount:  d.Amount.StringFixedBank(2),
+		})
+	}
+	resp.TotalDiscount = discounts.TotalDiscount().StringFixedBank(2)
+	resp.Net = cart.TotalAmount().Sub(discounts.TotalDiscount()).StringFixedBank(2)
+	return res.Success(c, resp)
 }
 
 func (h *CartHandler) AddBookToCart(c echo.Context) error {
@@ -34,7 +57,7 @@ func (h *CartHandler) AddBookToCart(c echo.Context) error {
 	if err := c.Validate(req); err != nil {
 		return res.Error(c, err)
 	}
-	posID := c.Get("pos-id").(int)
+	posID := util.GetToken(c)
 	cartID, err := h.service.GetCartIDFromPos(posID)
 	if err != nil {
 		return res.Error(c, err)
@@ -66,7 +89,7 @@ func (h *CartHandler) RemoveBookToCart(c echo.Context) error {
 	if err != nil {
 		return res.Error(c, err)
 	}
-	posID := c.Get("pos-id").(int)
+	posID := util.GetToken(c)
 	cartID, err := h.service.GetCartIDFromPos(posID)
 	if err != nil {
 		return res.Error(c, err)
@@ -91,14 +114,14 @@ func (h *CartHandler) Checkout(c echo.Context) error {
 	if err != nil {
 		return res.Error(c, err)
 	}
-	posID := c.Get("pos-id").(int)
+	posID := util.GetToken(c)
 	cartID, err := h.service.GetCartIDFromPos(posID)
 	if err != nil {
 		return res.Error(c, err)
 	}
-	charge, err := h.service.Checkout(cartID, cash)
+	change, err := h.service.Checkout(cartID, cash)
 	if err != nil {
 		return res.Error(c, err)
 	}
-	return res.Success(c, map[string]decimal.Decimal{"charge": charge})
+	return res.Success(c, map[string]string{"change": change.StringFixedBank(2)})
 }

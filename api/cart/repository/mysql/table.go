@@ -16,7 +16,7 @@ type orderTable struct {
 
 type orderWithBookTable struct {
 	orderTable
-	Title string          `db:"tittle"`
+	Title string          `db:"title"`
 	Cover string          `db:"cover"`
 	Price decimal.Decimal `db:"price"`
 }

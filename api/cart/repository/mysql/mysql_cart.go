@@ -7,12 +7,6 @@ import (
 	"lbbs-service/domain"
 )
 
-var log *logrus.Logger
-
-type mysqlCartRepository struct {
-	db *sqlx.DB
-}
-
 func (r mysqlCartRepository) CountOrdersInCart(cartID int) (int, error) {
 	query := `
 		SELECT count(*) AS count
@@ -49,6 +43,7 @@ func (r mysqlCartRepository) FindCartByID(cartID int) (domain.Cart, error) {
 }
 
 func (r mysqlCartRepository) CreateNewCart(posID int) (domain.Cart, error) {
+	log.Error(posID)
 	query := "INSERT INTO carts (pos_terminal_id) VALUE (?);"
 	tx := r.db.MustBegin()
 	if _, err := tx.Exec(query, posID); err != nil {
@@ -92,7 +87,7 @@ func (r mysqlCartRepository) FlushCart(cart domain.Cart) error {
 func (r mysqlCartRepository) FindOrder(cartID, BookID int) (domain.Order, error) {
 	var orderTable orderWithBookTable
 	query := `
-		SELECT o.id, cart_id, book_id, qty, tittle, cover, price
+		SELECT o.id, cart_id, book_id, qty, title, cover, price
 		FROM orders AS o
 				 LEFT JOIN books b ON o.book_id = b.id
 		WHERE cart_id = ?
@@ -105,10 +100,10 @@ func (r mysqlCartRepository) FindOrder(cartID, BookID int) (domain.Order, error)
 	return domain.Order{
 		ID: orderTable.ID,
 		Book: domain.Book{
-			ID:     orderTable.BookID,
-			Tittle: orderTable.Title,
-			Cover:  orderTable.Cover,
-			Price:  orderTable.Price,
+			ID:    orderTable.BookID,
+			Title: orderTable.Title,
+			Cover: orderTable.Cover,
+			Price: orderTable.Price,
 		},
 		Qty: orderTable.Qty,
 	}, nil
@@ -174,7 +169,7 @@ func (r mysqlCartRepository) FindCartByPosID(posID int) (domain.Cart, error) {
 func (r mysqlCartRepository) GetOrders(cartID int) ([]domain.Order, error) {
 	var orderTable []orderWithBookTable
 	query := `
-		SELECT o.id, cart_id, book_id, qty, tittle, cover, price
+		SELECT o.id, cart_id, book_id, qty, title, cover, price
 		FROM orders AS o
 				 LEFT JOIN books b ON o.book_id = b.id
 		WHERE cart_id = ?`
@@ -190,18 +185,13 @@ func (r mysqlCartRepository) GetOrders(cartID int) ([]domain.Order, error) {
 		orders = append(orders, domain.Order{
 			ID: o.ID,
 			Book: domain.Book{
-				ID:     o.BookID,
-				Tittle: o.Title,
-				Cover:  o.Cover,
-				Price:  o.Price,
+				ID:    o.BookID,
+				Title: o.Title,
+				Cover: o.Cover,
+				Price: o.Price,
 			},
 			Qty: o.Qty,
 		})
 	}
 	return orders, nil
-}
-
-func NewMysqlCartRepository(db *sqlx.DB, logger *logrus.Logger) *mysqlCartRepository {
-	log = logger
-	return &mysqlCartRepository{db: db}
 }
