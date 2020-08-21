@@ -1,0 +1,1 @@
+mysql://user:password@tcp(address:port)/database_name
