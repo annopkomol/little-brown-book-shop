@@ -34,7 +34,7 @@ type CartService interface {
 	GetCart(posID int) (cart Cart, err error)
 	AddBookToCart(cartID, bookID int) (remaining int, err error)
 	RemoveBookFromCart(cartID, bookID, qty int) (remaining int, err error)
-	Checkout(cartID int, cash decimal.Decimal) (charge decimal.Decimal, err error)
+	Checkout(cartID int, cash decimal.Decimal) (change decimal.Decimal, err error)
 }
 
 type CartRepository interface {
