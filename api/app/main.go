@@ -20,6 +20,7 @@ import (
 	cartrepository "lbbs-service/cart/repository/mysql"
 	cartservice "lbbs-service/cart/service"
 	carthandler "lbbs-service/cart/transport/http"
+	discountservice "lbbs-service/discount/service"
 	"lbbs-service/middleware"
 	"lbbs-service/route"
 	"lbbs-service/util"
@@ -66,16 +67,32 @@ func main() {
 	e.Use(echomdw.Logger())
 	e.Use(echomdw.Recover())
 	e.Use(echomdw.CORS())
-	//e.Use(echomdw.CSRF())
 
 	// Auth
 	middleware.InitAuth(signKey)
 	util.InitAuth(signKey)
 
 	// Database
-	db, err := sqlx.Connect("mysql", dbConn)
-	if err != nil {
-		log.Panic(err)
+	connectDB := func() (*sqlx.DB, error) {
+		return sqlx.Connect("mysql", dbConn)
+	}
+	var (
+		db  *sqlx.DB
+		err error
+	)
+
+	for i := 0; i < 3; i++ {
+		db, err = connectDB()
+		if err != nil {
+			log.Warn(err)
+			log.Info("retrying...")
+			time.Sleep(3 * time.Second)
+		} else {
+			break
+		}
+		if i == 3 {
+			log.Panic("couldn't connect to database")
+		}
 	}
 	defer db.Close()
 	db.SetMaxOpenConns(25)
@@ -85,16 +102,37 @@ func main() {
 	db.SetConnMaxIdleTime(15 * time.Minute)
 
 	// Dependency Injection
-	bookRepo := bookrepository.NewMysqlBookRepository(db, log)
-	bookSvc := bookservice.NewBookService(bookRepo, log)
+	bookRepo := bookrepository.NewMysqlBookRepository(bookrepository.Config{
+		DB:     db,
+		Logger: log,
+	})
+	bookSvc := bookservice.NewBookService(bookservice.Config{
+		BookRepository: bookRepo,
+		Logger:         log,
+	})
 	bookHdlr := bookhandler.NewBookHandler(bookSvc)
 
-	cartRepo := cartrepository.NewMysqlCartRepository(db, log)
-	cartSvc := cartservice.NewCartService(cartRepo, log)
-	cartHdlr := carthandler.NewCartHandler(cartSvc)
+	discountSvc := discountservice.NewDiscountService()
 
-	authRepo := authrepository.NewMysqlAuthRepository(db, log)
-	authSvc := authservice.NewAuthService(authRepo, log)
+	cartRepo := cartrepository.NewMysqlCartRepository(cartrepository.Config{
+		DB:     db,
+		Logger: log,
+	})
+	cartSvc := cartservice.NewCartService(cartservice.Config{
+		CartRepository:  cartRepo,
+		DiscountService: discountSvc,
+		Logger:          log,
+	})
+	cartHdlr := carthandler.NewCartHandler(cartSvc, discountSvc)
+
+	authRepo := authrepository.NewMysqlAuthRepository(authrepository.Config{
+		DB:     db,
+		Logger: log,
+	})
+	authSvc := authservice.NewAuthService(authservice.Config{
+		AuthRepository: authRepo,
+		Logger:         log,
+	})
 	authHdlr := authhandler.NewAuthHandler(authSvc)
 
 	route.Init(route.Config{
